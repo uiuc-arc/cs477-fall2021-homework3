@@ -201,50 +201,50 @@ class AbstractInterpretation():
                     return self.runHelper(nodeList + [node.trueCase, node.falseCase])
 
 
-# class PointersDomain():
-#     topElement = set(['null'])
-#     bottomElement = set([])
+class PointersDomain():
+    topElement = set(['null'])
+    bottomElement = set([])
 
-#     # Returns the least upper bound given two elements (join operator)
-#     # Implement the latice for Allocation sites here.
-#     # We have already defined the bottom element to be the empty set and the top element to be a set with ['null']
-#     # Elements of the abstractDomain are sets of object allocation sites
-#     def lub(a, b):
-#         return []
+    # Returns the least upper bound given two elements (join operator)
+    # Implement the latice for Allocation sites here.
+    # We have already defined the bottom element to be the empty set and the top element to be a set with ['null']
+    # Elements of the abstractDomain are sets of object allocation sites
+    def lub(a, b):
+        return []
 
-#     # Checks if two abstract states are the same
-#     # Remember that the abstract states map each variable to a element in the abstract domain
-#     def isEqual(state1, state2):
-#         return True
+    # Checks if two abstract states are the same
+    # Remember that the abstract states map each variable to a element in the abstract domain
+    def isEqual(state1, state2):
+        return True
 
-#     # This is the main tranfer function that need to be implemented.
-#     # For each type of statement define how the currentState get transformed and return the updated state.
-#     def statementTransfer(block, currentState, nextAbstractState):
-#         if isinstance(block.content, pointersParser.SkipContext):
-#             # what needs to happen if it is a skip statement
-#             return []
-#         elif isinstance(block.content, pointersParser.AssignContext):            
-#             if not isinstance(block.content.variable(1), pointersParser.NullvarContext):
-#                 # what need to be done if the variable is assigned null
-#                 return []
-#             else:
-#                 # what need to be done if the variable is assigned another variable
-#                 return []
-#         elif isinstance(block.content, pointersParser.AllocContext):
-#             # how to handle the newObject statement
-#             # use block.bbid to access the block id of the current CFG node
-#             # use block.content.variable().getText() to access the variable being assigned
-#             pass
-#         else:
-#             # For split nodes in the CFG we will be adding join nodes. Those nodes do not change the state
-#             return currentState
+    # This is the main tranfer function that need to be implemented.
+    # For each type of statement define how the currentState get transformed and return the updated state.
+    def statementTransfer(block, currentState, nextAbstractState):
+        if isinstance(block.content, pointersParser.SkipContext):
+            # what needs to happen if it is a skip statement
+            return []
+        elif isinstance(block.content, pointersParser.AssignContext):            
+            if not isinstance(block.content.variable(1), pointersParser.NullvarContext):
+                # what need to be done if the variable is assigned null
+                return []
+            else:
+                # what need to be done if the variable is assigned another variable
+                return []
+        elif isinstance(block.content, pointersParser.AllocContext):
+            # how to handle the newObject statement
+            # use block.bbid to access the block id of the current CFG node
+            # use block.content.variable().getText() to access the variable being assigned
+            pass
+        else:
+            # For split nodes in the CFG we will be adding join nodes. Those nodes do not change the state
+            return currentState
 
-#     # how do we merge two abstract states togeter
-#     # Remember that the abstract states map each variable to a element in the abstract domain
-#     # hint use the PointersDomain.lub function
-#     def merge(abstractState1, abstractState2):
-#         # Replace the return statement. This is currently here to prevent the program crashing. 
-#         return abstractState1
+    # how do we merge two abstract states togeter
+    # Remember that the abstract states map each variable to a element in the abstract domain
+    # hint use the PointersDomain.lub function
+    def merge(abstractState1, abstractState2):
+        # Replace the return statement. This is currently here to prevent the program crashing. 
+        return abstractState1
 
 if __name__ == '__main__':
     input_file = sys.argv[1]
