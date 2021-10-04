@@ -157,7 +157,7 @@ class AbstractInterpretation():
 
     def printAbsState(self):
         for key in self.stateMap:
-            print(key, self.stateMap[key])
+            print(key, repr(sorted(self.stateMap[key].items())))
 
     def run(self):
         self.runHelper(self.statementList.copy())
@@ -225,10 +225,10 @@ class PointersDomain():
             return []
         elif isinstance(block.content, pointersParser.AssignContext):            
             if not isinstance(block.content.variable(1), pointersParser.NullvarContext):
-                # what need to be done if the variable is assigned null
+                # what need to be done if the variable is assigned another variable
                 return []
             else:
-                # what need to be done if the variable is assigned another variable
+                # what need to be done if the variable is assigned null                
                 return []
         elif isinstance(block.content, pointersParser.AllocContext):
             # how to handle the newObject statement
