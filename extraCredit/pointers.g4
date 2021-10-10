@@ -4,7 +4,8 @@ grammar pointers;
 * Parser Rules
 */
 
-variable: VAR;
+variable: VAR # variableName
+    ;
 
 booleanExpression: INT
     | expression EQUALS expression
