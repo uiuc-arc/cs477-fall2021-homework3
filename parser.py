@@ -223,7 +223,8 @@ class PointersDomain():
         if isinstance(block.content, pointersParser.SkipContext):
             # what needs to happen if it is a skip statement
             return []
-        elif isinstance(block.content, pointersParser.AssignContext):            
+        elif isinstance(block.content, pointersParser.AssignContext):
+            # To access the name of the assigned variable you can use block.content.variable(0).getText()
             if not isinstance(block.content.variable(1), pointersParser.NullvarContext):
                 # what need to be done if the variable is assigned another variable
                 return []
