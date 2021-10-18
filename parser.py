@@ -10,6 +10,14 @@ import networkx as nx
 
 import operator
 
+
+# This class holds the data for a Control Flow Graph node
+# content - the code for the node
+# text    - is a textual representation
+# isSplit - denotes whether the CFG node is splitting the execution (start of a loop, conditional)
+# bbid    - Integer id for the node
+# nextblock - If the node is not a split node this will contain a link to the next node in the graph
+# trueCase, falseCase - If the node is a split node these will point to the two possible next nodes
 class CFGNode:
     def __init__(self, *args):
         self.content = args[0]
@@ -41,8 +49,17 @@ class CFG:
         finalNode.setNextBlock(self.endNode)
         self.maxBBId = finalid+1
 
-    
+
+    # For each statement we will define here how to add the statement to a CFG
+    # The inputs to this function are:
+    # 1. the current statment being processed
+    # 2. the previous node - so that we can point it to the current node
+    # 3. Current highest id for the cfg nodes
+    #
+    # The function returns the updated bbid, start of the newly added section to the CFG and the end node of the new section.
     def processSingleStatement(statement, prevNode, bbid):
+        # For statements that does not impact control flow we create a new object
+        # We then set the prevNode's next block as the current  block
         if (isinstance(statement, pointersParser.AssignContext) or
             isinstance(statement, pointersParser.AllocContext) or
             isinstance(statement, pointersParser.SkipContext)):
@@ -50,7 +67,8 @@ class CFG:
             if prevNode:
                 prevNode.setNextBlock(newBlock)
             return bbid+1, newBlock, newBlock
-        
+
+        # If the statement is a if condition, 
         if isinstance(statement, pointersParser.IfContext):
             newBlock = CFGNode(None, "IF: [{}]".format(statement.cond.getText()), True, bbid + 1)
             bbid, ifbranch, endNode1 =  CFG.buildCFG(statement.ifs, None, bbid + 1)
@@ -162,30 +180,49 @@ class AbstractInterpretation():
     def run(self):
         self.runHelper(self.statementList.copy())
 
+    # This function performs the abstract interpretation
+    # The input to the function is a list of cfg nodes
     def runHelper(self, nodeList):
+        # If the list is empty we are done
         if len(nodeList) == 0:
-            return 
+            return
+
+        # We pop the first node of the list and applies the transformer function on the node
         node = nodeList.pop(0)
+
+        # If the node is not a split node we can apply the transfer function
+        # If the transfer function changes the abstract state for the next node we will merge the two states
         if not node.isSplit:
             nextBlock = node.nextblock
             if nextBlock:
                 myState = self.stateMap[node.bbid]
                 oldState = self.stateMap[nextBlock.bbid].copy()
-                newState = self.absDomain.statementTransfer(nextBlock, myState, oldState)
+
+                # Applying the transfer function based on the abstract domain
+                newState = self.absDomain.statementTransfer(nextBlock, myState)
                 self.stateMap[nextBlock.bbid] = self.absDomain.merge(oldState, newState)
+
                 if self.absDomain.isEqual(oldState, newState):
+                    # If the state did not change we will continue the analysis on the remaining node
                     return self.runHelper(nodeList)
                 else:
+                    # if the state changed we have not reached a fixed point
+                    # In this case we will re add the statement to the list
                     return self.runHelper(nodeList + [nextBlock])
             else:
+                # If this is the last node,, do nothing
                 return self.runHelper(nodeList)
         else:
+            # To handle split nodes we will apply the tranfer function to boith branches
+            # We will change the state for the branches if they change due to the transfer function
             myState = self.stateMap[node.bbid]
             oldStateT = self.stateMap[node.trueCase.bbid].copy()            
-            newStateT = self.absDomain.statementTransfer(node.trueCase, myState, oldStateT)
+            newStateT = self.absDomain.statementTransfer(node.trueCase, myState,)
             oldStateF = self.stateMap[node.falseCase.bbid].copy()
-            newStateF = self.absDomain.statementTransfer(node.falseCase, myState, oldStateF)
+            newStateF = self.absDomain.statementTransfer(node.falseCase, myState)
 
+            # If the states chaged we have not reached a fixed point.
+            # Based on whether a single path or both paths changed, we will add the statments back to the analysis
             if self.absDomain.isEqual(oldStateT, newStateT):
                 if self.absDomain.isEqual(oldStateF, newStateF):
                     return self.runHelper(nodeList)
@@ -219,7 +256,7 @@ class PointersDomain():
 
     # This is the main tranfer function that need to be implemented.
     # For each type of statement define how the currentState get transformed and return the updated state.
-    def statementTransfer(block, currentState, nextAbstractState):
+    def statementTransfer(block, currentState):
         if isinstance(block.content, pointersParser.SkipContext):
             # what needs to happen if it is a skip statement
             return []
