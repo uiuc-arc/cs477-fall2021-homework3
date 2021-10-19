@@ -131,11 +131,18 @@ class CFG:
             if node.isSplit:
                 CFG.drawCFGHelper(node.trueCase, node.bbid, G)
                 CFG.drawCFGHelper(node.falseCase, node.bbid, G)
-                G.add_edge(nodeFormatStr.format(node.bbid, node.text), nodeFormatStr.format(node.trueCase.bbid, node.trueCase.text))
-                G.add_edge(nodeFormatStr.format(node.bbid, node.text), nodeFormatStr.format(node.falseCase.bbid, node.falseCase.text))
+                G.add_edge(nodeFormatStr.format(node.bbid, node.text),
+                           nodeFormatStr.format(node.trueCase.bbid,
+                                                node.trueCase.text))
+                G.add_edge(nodeFormatStr.format(node.bbid, node.text),
+                           nodeFormatStr.format(node.falseCase.bbid,
+                                                node.falseCase.text))
             else:
                 if node.nextblock: 
-                    G.add_edge(nodeFormatStr.format(node.bbid, node.text), nodeFormatStr.format(node.nextblock.bbid, node.nextblock.text))
+                    G.add_edge(nodeFormatStr.format(node.bbid,
+                                                    node.text),
+                               nodeFormatStr.format(node.nextblock.bbid,
+                                                    node.nextblock.text))
             if node.nextblock and node.nextblock.bbid <= node.bbid:
                 break
             node = node.nextblock
@@ -161,13 +168,21 @@ class AbstractInterpretation():
         self.ast = ast        
         self.cfg = cfg
         self.absDomain = absDomain
+        # The statemap is initialized to have an abstract state for each CFG node. 
         self.stateMap = self.getInitialStateMap()
+        # A list of statements are created. The analysis applies the
+        # transfer functions along this order.
         self.statementList = cfg.getList()
 
+    
     def getInitialStateMap(self):
+        # Following code goes through the code and identifies all the variables used in the program
         variableExplorer = getVarSet()
         walker = ParseTreeWalker()
         walker.walk(variableExplorer, self.ast)
+
+        # Then, for each node in the CFG, following code creates a map
+        # from each variable to the bottom element of the abstract domain
         stateMap = {}
         for i in range(self.cfg.maxBBId+1):
             stateMap[i] = dict.fromkeys(variableExplorer.varset, self.absDomain.bottomElement)        
@@ -222,7 +237,8 @@ class AbstractInterpretation():
             newStateF = self.absDomain.statementTransfer(node.falseCase, myState)
 
             # If the states chaged we have not reached a fixed point.
-            # Based on whether a single path or both paths changed, we will add the statments back to the analysis
+            # Based on whether a single path or both paths changed, we
+            # will add the statments back to the analysis
             if self.absDomain.isEqual(oldStateT, newStateT):
                 if self.absDomain.isEqual(oldStateF, newStateF):
                     return self.runHelper(nodeList)
@@ -254,7 +270,7 @@ class PointersDomain():
     def isEqual(state1, state2):
         return True
 
-    # This is the main tranfer function that need to be implemented.
+    # This is the main transfer function that need to be implemented.
     # For each type of statement define how the currentState get transformed and return the updated state.
     def statementTransfer(block, currentState):
         if isinstance(block.content, pointersParser.SkipContext):
@@ -277,7 +293,7 @@ class PointersDomain():
             # For split nodes in the CFG we will be adding join nodes. Those nodes do not change the state
             return currentState
 
-    # how do we merge two abstract states togeter
+    # how do we merge two abstract states together
     # Remember that the abstract states map each variable to a element in the abstract domain
     # hint use the PointersDomain.lub function
     def merge(abstractState1, abstractState2):
@@ -286,7 +302,8 @@ class PointersDomain():
 
 if __name__ == '__main__':
     input_file = sys.argv[1]
-    
+
+    # Reading the input program and building a CFG
     program_str = open(input_file).read()
     input_stream = InputStream(program_str)
     lexer = pointersLexer(input_stream)
@@ -302,6 +319,7 @@ if __name__ == '__main__':
     CFG.drawCFG(cfg.startNode)
     print('--------------')
 
+    # Applying Abstract Interpretation
     absInterp = AbstractInterpretation(ast, cfg, PointersDomain)
     absInterp.run()
     absInterp.printAbsState()
