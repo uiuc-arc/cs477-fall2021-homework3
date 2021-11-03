@@ -1,0 +1,23 @@
+--------------
+Start 0
+While [T] 1
+IF: [T] 2
+x:=newObjectT1 3
+Join 5
+y:=x 6
+x:=null 4
+Join 5
+y:=x 6
+skip 7
+End 8
+--------------
+0 [('T', set()), ('x', set()), ('y', set())]
+1 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+2 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+3 [('T', set()), ('x', {3}), ('y', {'null'})]
+4 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+5 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+6 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+7 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+8 [('T', set()), ('x', {'null'}), ('y', {'null'})]
+--------------
